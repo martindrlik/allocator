@@ -48,8 +48,7 @@ type handler struct{}
 
 func (handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	n := atomic.AddUint64(&used, 1)
-	from := n*bulk - bulk
-	to := n * bulk
+	from, to := allocate(n, bulk)
 	enc := json.NewEncoder(w)
 	if err := enc.Encode(struct {
 		From, To uint64
@@ -59,4 +58,13 @@ func (handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	logger.Println("used", from, "to", to)
+}
+
+func allocate(n, bulk uint64) (from, to uint64) {
+	if n == 0 {
+		panic("n to be 0 is not allowed")
+	}
+	from = n*bulk - bulk
+	to = n*bulk - 1
+	return
 }
